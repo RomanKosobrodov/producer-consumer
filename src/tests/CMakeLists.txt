@@ -16,6 +16,8 @@ set(BENCHMARKS_TEST_HEADERS
 )
 
 set(BENCHMARKS_TEST_SOURCES
+  test_aligned_array.cpp
+  test_bad_solution.cpp
 	test_main.cpp
 )
 
@@ -24,6 +26,9 @@ add_executable(${BENCHMARKS_TEST_NAME}
     ${BENCHMARKS_TEST_SOURCES}
 )
 
+target_include_directories(${BENCHMARKS_TEST_NAME}
+  PRIVATE ${CMAKE_SOURCE_DIR}/benchmarks/
+)
 
 target_link_libraries(${BENCHMARKS_TEST_NAME}
     PRIVATE spdlog::spdlog

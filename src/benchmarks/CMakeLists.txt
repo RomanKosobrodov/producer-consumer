@@ -1,9 +1,12 @@
 set(BENCHMARKS "benchmarks")
 
 set(BENCHMARKS_HEADER_FILES
+    bad_solution.hpp
+    benchmark.hpp
+    storage.hpp
 )
 
-set(BENCHMARKS_SOURCE_FILES 
+set(BENCHMARKS_SOURCE_FILES
     main.cpp
 )
 
