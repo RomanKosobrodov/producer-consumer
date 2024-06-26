@@ -31,7 +31,23 @@ FetchContent_Declare(spdlog
     OVERRIDE_FIND_PACKAGE 
 )
 
-FetchContent_MakeAvailable(spdlog)
+FetchContent_Declare(
+    zmq
+    GIT_REPOSITORY https://github.com/zeromq/libzmq.git
+    GIT_TAG        v4.3.5
+    OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_Declare(
+    cppzmq
+    GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
+    GIT_TAG        v4.10.0
+    OVERRIDE_FIND_PACKAGE
+)
+
+set(CPPZMQ_BUILD_TESTS OFF CACHE BOOL "Do not build CppZmq tests" FORCE)
+
+FetchContent_MakeAvailable(spdlog zmq cppzmq)
 
 add_subdirectory(benchmarks)
 

@@ -87,6 +87,8 @@
     "xtree": "cpp",
     "xutility": "cpp",
     "latch": "cpp",
-    "queue": "cpp"
+    "queue": "cpp",
+    "shared_mutex": "cpp",
+    "barrier": "cpp"
   }
 }

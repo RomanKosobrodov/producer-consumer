@@ -5,25 +5,33 @@
 #include <shared_mutex>
 #include <vector>
 
+template <std::size_t false_sharing_range = 128>
+    requires(false_sharing_range > sizeof(std::atomic<std::size_t>))
+struct cursor
+{
+    alignas(false_sharing_range) std::atomic<std::size_t> seq;
+    char padding_[(false_sharing_range - sizeof(seq)) % false_sharing_range];
+};
+
 template <typename data_type, std::size_t alignment_bytes>
-class shared_mutex_solution
+class seqlock_solution
 {
     std::size_t n_blocks;
     std::size_t b_size;
+    std::vector<cursor<>> cursors;
     std::size_t offset_write;
-    std::vector<std::shared_mutex> mus;
     aligned_array<data_type, alignment_bytes> a;
 
 public:
-    shared_mutex_solution(std::size_t num_blocks, std::size_t block_size)
+    seqlock_solution(std::size_t num_blocks, std::size_t block_size)
         : n_blocks(num_blocks),
           b_size(block_size),
+          cursors(num_blocks),
           offset_write(0),
-          mus(num_blocks),
           a(num_blocks * block_size)
     {
     }
-    ~shared_mutex_solution() = default;
+    ~seqlock_solution() = default;
 
     [[nodiscard]] auto size() noexcept -> std::size_t { return n_blocks * b_size; }
 
@@ -37,10 +45,12 @@ public:
         if (src != nullptr && size == b_size)
         {
             const size_t index = offset_write / size;
-            {
-                std::unique_lock lock(mus[index]);
-                std::memcpy(a.offset(offset_write), src, size * sizeof(data_type));
-            }
+            std::size_t seq0 = cursors[index].seq.load(std::memory_order_relaxed);
+            cursors[index].seq.store(seq0 + 1, std::memory_order_release);
+            std::atomic_signal_fence(std::memory_order_acq_rel);
+            std::memcpy(a.offset(offset_write), src, size * sizeof(data_type));
+            std::atomic_signal_fence(std::memory_order_acq_rel);
+            cursors[index].seq.store(seq0 + 2, std::memory_order_release);
             offset_write += size;
             offset_write = offset_write % a.size();
             return;
@@ -53,10 +63,17 @@ public:
         if (dst != nullptr && size == b_size)
         {
             const size_t index = offset / size;
+            std::size_t seq0;
+            std::size_t seq1;
+            do
             {
-                std::shared_lock lock(mus[index]);
+                seq0 = cursors[index].seq.load(std::memory_order_acquire);
+                std::atomic_signal_fence(std::memory_order_acq_rel);
                 std::memcpy(dst, a.offset(offset), size * sizeof(data_type));
-            }
+                std::atomic_signal_fence(std::memory_order_acq_rel);
+                seq1 = cursors[index].seq.load(std::memory_order_acquire);
+            } while (seq0 != seq1 || seq0 & 1);
+
             return;
         }
         throw std::runtime_error("invalid pointer or block size");

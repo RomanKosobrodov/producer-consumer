@@ -19,6 +19,8 @@ set(BENCHMARKS_TEST_SOURCES
   test_aligned_array.cpp
   test_bad_solution.cpp
 	test_main.cpp
+  test_seqlock_solution.cpp
+  test_zmq.cpp
 )
 
 add_executable(${BENCHMARKS_TEST_NAME}
@@ -32,6 +34,7 @@ target_include_directories(${BENCHMARKS_TEST_NAME}
 
 target_link_libraries(${BENCHMARKS_TEST_NAME}
     PRIVATE spdlog::spdlog
+    PRIVATE cppzmq
     PRIVATE Catch2::Catch2WithMain
 )    
 
