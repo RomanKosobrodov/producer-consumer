@@ -1,6 +1,6 @@
 #pragma once
 
-#include "storage.hpp"
+#include "aligned_array.hpp"
 #include <cstring>
 #include <shared_mutex>
 #include <vector>

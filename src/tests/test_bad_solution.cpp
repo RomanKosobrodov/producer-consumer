@@ -1,12 +1,13 @@
 #include <catch2/catch_test_macros.hpp>
-#include <bad_solution.hpp>
+#include <aligned_array.hpp>
+#include <unsynchronised_solution.hpp>
 
-TEST_CASE("bad_solution is correctly implemented")
+TEST_CASE("unsynchronised_solution is correctly implemented")
 {
     constexpr std::size_t num_blocks = 10;
     constexpr std::size_t block_size = 640;
     constexpr std::size_t alignment = 16;
-    bad_solution<std::uint64_t, alignment> a(num_blocks, block_size);
+    unsync_solution<std::uint64_t, alignment> a(num_blocks, block_size);
     aligned_array<std::uint64_t> src(block_size);
     SECTION("write catches wrong input")
     {

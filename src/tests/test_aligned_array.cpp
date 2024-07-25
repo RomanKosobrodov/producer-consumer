@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include <storage.hpp>
+#include <aligned_array.hpp>
 
 TEST_CASE("aligned_array can be default constructed")
 {

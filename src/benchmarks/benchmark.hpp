@@ -1,6 +1,6 @@
 #pragma once
 
-#include "storage.hpp"
+#include "aligned_array.hpp"
 #include <spdlog/spdlog.h>
 #include <chrono>
 #include <latch>
@@ -51,6 +51,7 @@ void reader(solution &store,
     read_time_ns = 0;
     std::size_t offset{0};
     const std::size_t total_size = store.size();
+
     for (size_t k = 0; k < cycles; ++k)
     {
         const auto t0 = std::chrono::high_resolution_clock::now();

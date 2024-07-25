@@ -1,10 +1,13 @@
 set(BENCHMARKS "benchmarks")
 
 set(BENCHMARKS_HEADER_FILES
-    bad_solution.hpp
+    aligned_array.hpp
     benchmark.hpp
+    seqlock_solution.hpp
     storage.hpp
+    synchronised_solution.hpp
     zmq_benchmark.hpp
+    unsynchronised_solution.hpp
 )
 
 set(BENCHMARKS_SOURCE_FILES

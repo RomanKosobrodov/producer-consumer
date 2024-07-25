@@ -1,21 +1,22 @@
 #pragma once
 
-#include "storage.hpp"
+#include "aligned_array.hpp"
 #include <cstring>
-#include <shared_mutex>
 #include <vector>
+#include <mutex>
+#include <shared_mutex>
 
-template <typename data_type, std::size_t alignment_bytes>
-class shared_mutex_solution
+template <typename data_type, std::size_t alignment_bytes, class mutex_class, class write_lock, class read_lock>
+class synchronised_solution
 {
     std::size_t n_blocks;
     std::size_t b_size;
     std::size_t offset_write;
-    std::vector<std::shared_mutex> mus;
+    std::vector<mutex_class> mus;
     aligned_array<data_type, alignment_bytes> a;
 
 public:
-    shared_mutex_solution(std::size_t num_blocks, std::size_t block_size)
+    synchronised_solution(std::size_t num_blocks, std::size_t block_size)
         : n_blocks(num_blocks),
           b_size(block_size),
           offset_write(0),
@@ -23,7 +24,7 @@ public:
           a(num_blocks * block_size)
     {
     }
-    ~shared_mutex_solution() = default;
+    ~synchronised_solution() = default;
 
     [[nodiscard]] auto size() noexcept -> std::size_t { return n_blocks * b_size; }
 
@@ -38,7 +39,7 @@ public:
         {
             const size_t index = offset_write / size;
             {
-                std::unique_lock lock(mus[index]);
+                const write_lock lock(mus[index]);
                 std::memcpy(a.offset(offset_write), src, size * sizeof(data_type));
             }
             offset_write += size;
@@ -54,7 +55,7 @@ public:
         {
             const size_t index = offset / size;
             {
-                std::shared_lock lock(mus[index]);
+                const read_lock lock(mus[index]);
                 std::memcpy(dst, a.offset(offset), size * sizeof(data_type));
             }
             return;
@@ -62,3 +63,17 @@ public:
         throw std::runtime_error("invalid pointer or block size");
     }
 };
+
+template <typename data_type, std::size_t alignment_bytes>
+using shared_solution = synchronised_solution<data_type,
+                                              alignment_bytes,
+                                              std::shared_mutex,
+                                              std::unique_lock<std::shared_mutex>,
+                                              std::shared_lock<std::shared_mutex>>;
+
+template <typename data_type, std::size_t alignment_bytes>
+using exclusive_solution = synchronised_solution<data_type,
+                                                 alignment_bytes,
+                                                 std::mutex,
+                                                 std::lock_guard<std::mutex>,
+                                                 std::lock_guard<std::mutex>>;
