@@ -45,9 +45,15 @@ FetchContent_Declare(
     OVERRIDE_FIND_PACKAGE
 )
 
+FetchContent_Declare(cxxopts
+    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+    GIT_TAG 44739d3023155fbf5f93937e22a68c9a429f7b89
+    OVERRIDE_FIND_PACKAGE 
+)
+
 set(CPPZMQ_BUILD_TESTS OFF CACHE BOOL "Do not build CppZmq tests" FORCE)
 
-FetchContent_MakeAvailable(spdlog zmq cppzmq)
+FetchContent_MakeAvailable(spdlog zmq cppzmq cxxopts)
 
 add_subdirectory(benchmarks)
 
