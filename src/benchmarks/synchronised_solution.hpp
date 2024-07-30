@@ -30,7 +30,7 @@ public:
 
     void fill(data_type value)
     {
-        fill<data_type, alignment_bytes>(a, value);
+        fill_array(a, value);
     }
 
     void write(const data_type *src, std::size_t size)

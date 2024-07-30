@@ -3,7 +3,8 @@
 #include <new>
 #include <type_traits>
 #include <cstring>
-#include <utility>   // std::exchange
+#include <utility> // std::exchange
+#include <stdexcept>
 #include <exception> // std::out_of_range
 #include <format>
 
@@ -20,9 +21,9 @@ class aligned_array
     T *ptr;
 
 public:
-    aligned_array() : count(0), ptr(nullptr){};
+    aligned_array() : count(0), ptr(nullptr) {};
     aligned_array(std::size_t num_elements)
-        : count(num_elements), ptr(allocate(num_elements)){};
+        : count(num_elements), ptr(allocate(num_elements)) {};
 
     aligned_array(const aligned_array &other)
         : count(other.count), ptr(allocate(other.count))
@@ -86,7 +87,7 @@ private:
 };
 
 template <typename T, size_t ab>
-void fill(aligned_array<T, ab> &dst, T value)
+void fill_array(aligned_array<T, ab> &dst, T value)
 {
     const size_t last = dst.size() - 1;
     std::fill(dst.offset(0), dst.offset(last) + 1, value);

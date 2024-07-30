@@ -16,8 +16,8 @@ add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 if (UNIX)
-    add_compile_options("$<$<CONFIG:DEBUG>:-O1>" "$<$<CONFIG:DEBUG>:-fsanitize=undefined,address,leak>")
-    add_link_options("$<$<CONFIG:DEBUG>:-fsanitize=undefined,address,leak>")
+    add_compile_options("$<$<CONFIG:RelWithDebInfo>:-O2>" "$<$<CONFIG:RelWithDebInfo>:-fsanitize=thread>")
+    add_link_options("$<$<CONFIG:RelWithDebInfo>:-fsanitize=thread>")
 endif(UNIX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin")
@@ -58,7 +58,3 @@ FetchContent_MakeAvailable(spdlog zmq cppzmq cxxopts)
 add_subdirectory(benchmarks)
 
 add_subdirectory(tests)
-
-
-
-

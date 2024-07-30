@@ -8,9 +8,9 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/fmt/fmt.h>
 
+#include <string>
 #include <shared_mutex>
 #include <mutex>
-#include <format>
 #include <vector>
 #include <algorithm>
 
@@ -20,77 +20,94 @@ struct parameters
     std::size_t block_size{16};
     std::size_t num_readers{3};
     std::size_t num_cycles{1000000};
+    bool enable_memcpy{true};
+    bool enable_seqlock{true};
+    bool enable_shared_lock{true};
+    bool enable_mutex_lock{true};
+    bool enable_zmq{false};
 };
 
-void print_results(const std::string &message, const parameters &params, std::vector<double> &times, const char separator = ' ')
+inline std::string print_results(const std::string &message, const parameters &params, std::vector<double> &times, const char separator = ' ')
 {
-    fmt::print("{}", "{\n");
-    fmt::print("\"implementation\": \"{}\",\n", message);
-    fmt::print("\"num_cycles\": \"{}\",\n", params.num_cycles);
-    fmt::print("\"block_size\": \"{}\",\n", params.block_size);
-    fmt::print("\"num_blocks\": \"{}\",\n", params.num_blocks);
-    fmt::print("\"num_readers\": \"{}\",\n", params.num_readers);
-    fmt::print("\"reader\": {:.1f},\n", times[0]);
-    fmt::print("\"writers\": [");
+    std::string s = fmt::format("{}", "{\n");
+    s += fmt::format("\"implementation\": \"{}\",\n", message);
+    s += fmt::format("\"num_cycles\": \"{}\",\n", params.num_cycles);
+    s += fmt::format("\"block_size\": \"{}\",\n", params.block_size);
+    s += fmt::format("\"num_blocks\": \"{}\",\n", params.num_blocks);
+    s += fmt::format("\"num_readers\": \"{}\",\n", params.num_readers);
+    s += fmt::format("\"reader\": {:.1f},\n", times[0]);
+    s += fmt::format("\"writers\": [");
     std::vector<double> sorted(std::begin(times) + 1, std::end(times));
     std::sort(std::begin(sorted), std::end(sorted));
     for (auto k = 0; k < sorted.size() - 1; ++k)
     {
-        fmt::print("{:.1f}, ", sorted[k]);
+        s += fmt::format("{:.1f}, ", sorted[k]);
     }
-    fmt::print("{:.1f}]\n", sorted[sorted.size() - 1]);
-    fmt::print("{}{}\n", "}", separator);
+    s += fmt::format("{:.1f}]\n", sorted[sorted.size() - 1]);
+    return s + fmt::format("{}{}\n", "}", separator);
 }
 
-void run_benchmark(const parameters &p)
+std::string run_benchmark(const parameters &p)
 {
+    std::string s;
+
     constexpr std::size_t alignment_bytes{16};
     using data_type = std::uint64_t;
 
     std::vector<double> results;
 
-    using memcpy_solution_type = memcpy_solution<data_type, alignment_bytes>;
-    results = run_benchmark<memcpy_solution_type, data_type, alignment_bytes>(p.num_blocks,
-                                                                              p.block_size,
-                                                                              p.num_readers,
-                                                                              p.num_cycles);
-    print_results("Memcpy", p, results, ',');
+    if (p.enable_memcpy)
+    {
+        using memcpy_solution_type = memcpy_solution<data_type, alignment_bytes>;
+        results = run_benchmark<memcpy_solution_type, data_type, alignment_bytes>(p.num_blocks,
+                                                                                  p.block_size,
+                                                                                  p.num_readers,
+                                                                                  p.num_cycles);
+        s += print_results("Memcpy", p, results, ',');
+    }
 
-    using unsync_solution_type = unsync_solution<data_type, alignment_bytes>;
-    results = run_benchmark<unsync_solution_type, data_type, alignment_bytes>(p.num_blocks,
-                                                                              p.block_size,
-                                                                              p.num_readers,
-                                                                              p.num_cycles);
-    print_results("Unsync", p, results, ',');
+    if (p.enable_seqlock)
+    {
+        using seqlock_solution_type = seqlock_solution<data_type, alignment_bytes>;
+        results = run_benchmark<seqlock_solution_type, data_type, alignment_bytes>(p.num_blocks,
+                                                                                   p.block_size,
+                                                                                   p.num_readers,
+                                                                                   p.num_cycles);
+        s += print_results("SeqLock", p, results, ',');
+    }
 
-    using seqlock_solution_type = seqlock_solution<data_type, alignment_bytes>;
-    results = run_benchmark<seqlock_solution_type, data_type, alignment_bytes>(p.num_blocks,
-                                                                               p.block_size,
-                                                                               p.num_readers,
-                                                                               p.num_cycles);
-    print_results("SeqLock", p, results, ',');
+    if (p.enable_shared_lock)
+    {
+        using shared_solution_type = shared_solution<data_type, alignment_bytes>;
+        results = run_benchmark<shared_solution_type, data_type, alignment_bytes>(p.num_blocks,
+                                                                                  p.block_size,
+                                                                                  p.num_readers,
+                                                                                  p.num_cycles);
+        s += print_results("Shared mutex", p, results, ',');
+    }
 
-    using shared_solution_type = shared_solution<data_type, alignment_bytes>;
-    results = run_benchmark<shared_solution_type, data_type, alignment_bytes>(p.num_blocks,
-                                                                              p.block_size,
-                                                                              p.num_readers,
-                                                                              p.num_cycles);
-    print_results("Shared mutex", p, results, ',');
+    if (p.enable_mutex_lock)
+    {
+        using exclusive_solution_type = exclusive_solution<data_type, alignment_bytes>;
+        results = run_benchmark<exclusive_solution_type, data_type, alignment_bytes>(p.num_blocks,
+                                                                                     p.block_size,
+                                                                                     p.num_readers,
+                                                                                     p.num_cycles);
+        s += print_results("Mutex", p, results, ',');
+    }
 
-    using exclusive_solution_type = exclusive_solution<data_type, alignment_bytes>;
-    results = run_benchmark<exclusive_solution_type, data_type, alignment_bytes>(p.num_blocks,
-                                                                                 p.block_size,
-                                                                                 p.num_readers,
-                                                                                 p.num_cycles);
-    print_results("Mutex", p, results, ',');
+    if (p.enable_zmq)
+    {
+        parameters p_zmq = p;
+        p_zmq.num_cycles = 100;
+        results = run_zmq_benchmark<data_type, alignment_bytes>(p_zmq.block_size,
+                                                                p_zmq.num_readers,
+                                                                p_zmq.num_cycles);
 
-    parameters p_zmq = p;
-    p_zmq.num_cycles = 100;
-    results = run_zmq_benchmark<data_type, alignment_bytes>(p_zmq.block_size,
-                                                            p_zmq.num_readers,
-                                                            p_zmq.num_cycles);
+        s += print_results("ZMQ", p, results, ',');
+    }
 
-    print_results("ZMQ", p, results);
+    return s;
 }
 
 int main(int argc, char *argv[])
@@ -100,8 +117,24 @@ int main(int argc, char *argv[])
     file_logger->set_level(spdlog::level::debug);
     spdlog::set_default_logger(file_logger);
 
+    constexpr std::size_t block_sizes[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
+    constexpr std::size_t readers[] = {1, 2, 3};
     parameters p;
-    run_benchmark(p);
+    std::string s = "{ \"results\": [\n";
+
+    for (const auto &b : block_sizes)
+    {
+        for (const auto &r : readers)
+        {
+            p.block_size = b;
+            p.num_readers = r;
+            s += run_benchmark(p);
+        }
+    }
+    s[s.size() - 2] = ' ';
+    s += "]\n}";
+
+    fmt::print("{}\n", s);
 
     file_logger->flush();
     spdlog::shutdown();

@@ -19,7 +19,7 @@ public:
 
     void fill(data_type value)
     {
-        fill<data_type, alignment_bytes>(a, value);
+        fill_array(a, value);
     }
 
     [[nodiscard]] auto write_offset(std::size_t d) const -> data_type *
@@ -47,12 +47,12 @@ public:
         : a(num_elements),
           b(num_elements)
     {
-        fill<data_type, alignment_bytes>(b, data_type{});
+        fill_array(b, data_type{});
     }
 
     void fill(data_type value)
     {
-        fill<data_type, alignment_bytes>(a, value);
+        fill_array(a, value);
     }
 
     [[nodiscard]] auto write_offset(std::size_t d) const -> data_type *

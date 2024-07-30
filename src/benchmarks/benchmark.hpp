@@ -17,7 +17,7 @@ void writer(solution &store,
     data_type value{0};
     aligned_array<data_type, alignment_bytes> src(block_size);
 
-    fill(src, value++);
+    fill_array(src, value++);
     store.write(src.data(), block_size);
 
     thread_latch.arrive_and_wait();
@@ -25,7 +25,7 @@ void writer(solution &store,
     write_time_ns = 0;
     for (size_t k = 1; k < cycles; ++k)
     {
-        fill(src, value++);
+        fill_array(src, value++);
         const auto t0 = std::chrono::high_resolution_clock::now();
         store.write(src.data(), block_size);
         const auto dt = std::chrono::high_resolution_clock::now() - t0;

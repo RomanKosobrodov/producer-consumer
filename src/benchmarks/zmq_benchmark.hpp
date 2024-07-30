@@ -34,7 +34,7 @@ void zmq_writer(zmq::context_t &ctx,
     write_time_ns = 0;
     for (size_t k = 1; k < cycles; ++k)
     {
-        fill(src, value++);
+        fill_array(src, value++);
         const auto t0 = std::chrono::high_resolution_clock::now();
         result = publisher.send(buffer);
         const auto dt = std::chrono::high_resolution_clock::now() - t0;

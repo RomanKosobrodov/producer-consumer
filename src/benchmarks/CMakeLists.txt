@@ -6,8 +6,8 @@ set(BENCHMARKS_HEADER_FILES
     seqlock_solution.hpp
     storage.hpp
     synchronised_solution.hpp
-    zmq_benchmark.hpp
     unsynchronised_solution.hpp
+    zmq_benchmark.hpp
 )
 
 set(BENCHMARKS_SOURCE_FILES
