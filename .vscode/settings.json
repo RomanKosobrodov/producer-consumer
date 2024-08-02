@@ -1,5 +1,5 @@
 {
-  "cmake.sourceDirectory": "/home/roman/Projects/producer-consumer/src",
+  "cmake.sourceDirectory": "C:/Users/User/Projects/producer-consumer/src",
   "files.associations": {
     "algorithm": "cpp",
     "array": "cpp",

@@ -13,6 +13,7 @@
 #include <mutex>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 struct parameters
 {
@@ -24,7 +25,7 @@ struct parameters
     bool enable_seqlock{true};
     bool enable_shared_lock{true};
     bool enable_mutex_lock{true};
-    bool enable_zmq{false};
+    bool enable_zmq{true};
 };
 
 inline std::string print_results(const std::string &message, const parameters &params, std::vector<double> &times, const char separator = ' ')
@@ -35,8 +36,8 @@ inline std::string print_results(const std::string &message, const parameters &p
     s += fmt::format("\"block_size\": \"{}\",\n", params.block_size);
     s += fmt::format("\"num_blocks\": \"{}\",\n", params.num_blocks);
     s += fmt::format("\"num_readers\": \"{}\",\n", params.num_readers);
-    s += fmt::format("\"reader\": {:.1f},\n", times[0]);
-    s += fmt::format("\"writers\": [");
+    s += fmt::format("\"writer\": {:.1f},\n", times[0]);
+    s += fmt::format("\"readers\": [");
     std::vector<double> sorted(std::begin(times) + 1, std::end(times));
     std::sort(std::begin(sorted), std::end(sorted));
     for (auto k = 0; k < sorted.size() - 1; ++k)
@@ -118,7 +119,7 @@ int main(int argc, char *argv[])
     spdlog::set_default_logger(file_logger);
 
     constexpr std::size_t block_sizes[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
-    constexpr std::size_t readers[] = {1, 2, 3};
+    constexpr std::size_t readers[] = {1, 2, 3, 4, 5};
     parameters p;
     std::string s = "{ \"results\": [\n";
 
@@ -134,7 +135,8 @@ int main(int argc, char *argv[])
     s[s.size() - 2] = ' ';
     s += "]\n}";
 
-    fmt::print("{}\n", s);
+    std::ofstream fo("results.json");
+    fo << s << "\n";
 
     file_logger->flush();
     spdlog::shutdown();

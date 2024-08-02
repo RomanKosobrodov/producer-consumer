@@ -1,6 +1,6 @@
 # Benchmarks of Single Producer Multiple Consumer implementations
 
-Comparison between several implementations of data exchange between a single producer and multiple consumers.
+This repository contains benchmark code for the [Benchmarking Producer-Consumer Implementations](https://kosobrodov.net/posts/producer-consumer-implementations/) blog post.
 
 # Disclaimer
 

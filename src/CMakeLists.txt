@@ -12,9 +12,6 @@ endif()
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "do not build shared libraries" FORCE)
 
-add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-
 if (UNIX)
     add_compile_options("$<$<CONFIG:RelWithDebInfo>:-O2>" "$<$<CONFIG:RelWithDebInfo>:-fsanitize=thread>")
     add_link_options("$<$<CONFIG:RelWithDebInfo>:-fsanitize=thread>")
